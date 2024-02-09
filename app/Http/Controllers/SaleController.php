@@ -82,7 +82,7 @@ class SaleController extends Controller
     {
         DB::beginTransaction();
         try {
-            $sales = Sale::with('salesProducts')->find(1);
+            $sales = Sale::with('salesProducts')->find($sale->id);
             $sales->update($request->all());
 
             $requestProductIds = collect($request->sales_products)->pluck('product_id')->all();
@@ -109,7 +109,8 @@ class SaleController extends Controller
                     if ($product->qty >= $changeInQty) {
                         $product->decrement('qty', $changeInQty);
                     } else {
-                        $message = "Insufficient quantity in stock for $product->product_name. Current stock: $product->qty, Requested: $purchasedQty";
+                        $current_stock = $product->qty+$previousBuyQty;
+                        $message = "Insufficient quantity in stock for $product->product_name. Current stock: $current_stock, Requested: $purchasedQty";
                         DB::rollBack();
                         return response()->json(['message' => $message], 422);
                     }
